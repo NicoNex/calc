@@ -61,7 +61,6 @@ func Parse(s string) ops.Node {
 	var tmp ops.Node
 	var tree ops.Node
 	var tokens = split(s)
-	fmt.Println(tokens)
 	var rop = regexp.MustCompile(operator)
 	var rco = regexp.MustCompile(constant)
 	// var rva = regexp.MustCompile(variable)
