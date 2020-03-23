@@ -1,5 +1,5 @@
 package ops
 
-type Leaf interface {
+type Node interface {
 	Eval() float64
 }

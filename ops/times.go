@@ -1,11 +1,11 @@
 package ops
 
 type Times struct {
-	l Leaf
-	r Leaf
+	l Node
+	r Node
 }
 
-func NewTimes(l, r Leaf) Times {
+func NewTimes(l, r Node) Node {
 	return Times{
 		l,
 		r,

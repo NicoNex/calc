@@ -4,7 +4,7 @@ type Const struct {
 	v float64
 }
 
-func NewConst(v float64) Const {
+func NewConst(v float64) Node {
 	return Const{v}
 }
 

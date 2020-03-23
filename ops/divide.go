@@ -1,11 +1,11 @@
 package ops
 
 type Divide struct {
-	l Leaf
-	r Leaf
+	l Node
+	r Node
 }
 
-func NewDivide(l, r Leaf) Divide {
+func NewDivide(l, r Node) Node {
 	return Divide{
 		l,
 		r,

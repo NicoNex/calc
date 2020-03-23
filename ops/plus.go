@@ -1,11 +1,11 @@
 package ops
 
 type Plus struct {
-	l Leaf
-	r Leaf
+	l Node
+	r Node
 }
 
-func NewPlus(l, r Leaf) Plus {
+func NewPlus(l, r Node) Node {
 	return Plus{
 		l,
 		r,

@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"github.com/NicoNex/calc/ops"
+	"github.com/NicoNex/calc/lexer"
 )
+
+
 
 func main() {
 	res := ops.NewTimes(
@@ -24,4 +27,6 @@ func main() {
 	)
 
 	fmt.Println(res.Eval(), res2.Eval())
+
+	fmt.Println(lexer.Parse("2+2*6.2").Eval())
 }
