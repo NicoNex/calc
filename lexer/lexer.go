@@ -9,6 +9,37 @@ import (
 	"github.com/NicoNex/calc/ops"
 )
 
+type Token struct {
+	Type CalType
+	Value string
+}
+
+type CalType int
+const (
+  OPERATOR CalType = iota
+  CONSTANT
+  VARIABLE
+)
+
+func scanNum(data []byte) {
+
+}
+
+func lex(data []byte) ([]Token, error) {
+  var ret []Token
+  var buf []byte
+  var state CalType
+  var reop := regexp.MustCompile(`[\+\-\*\/]`)
+  var recns := regexp.MustCompile(`\d`)
+  var revar := regexp.MustCompile(`\w`)
+
+  for k, b := range data {
+    switch {
+    case
+    }
+  }
+}
+
 type newop func(a, b ops.Node) ops.Node
 
 const (
