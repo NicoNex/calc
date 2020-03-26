@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"bufio"
 
-	"github.com/NicoNex/calc/lexer"
+	"github.com/NicoNex/calc/parser"
 )
 
 func main() {
@@ -19,6 +19,6 @@ func main() {
 			return
 		}
 
-		fmt.Println(lexer.Parse(string).Eval())
+		fmt.Println(parser.Parse(string).Eval())
 	}
 }
