@@ -3,10 +3,12 @@ package parser
 import (
 	"fmt"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
 type itemType int
+
 const (
 	operator itemType = iota
 	constant
@@ -22,7 +24,7 @@ type item struct {
 type lexer struct {
 	input string
 	start int
-	pos int
+	pos   int
 	width int
 	items chan item
 }
@@ -37,7 +39,7 @@ func (i item) String() string {
 	if len(i.val) > 10 {
 		return fmt.Sprintf("%.10q...", i.val)
 	}
-	return fmt.Sprintf("%q", i)
+	return fmt.Sprintf("%q", i.val)
 }
 
 func (l *lexer) next() (rune rune) {
@@ -56,7 +58,7 @@ func (l *lexer) ignore() {
 }
 
 func (l *lexer) backup() {
-	l.start -= l.width
+	l.pos -= l.width
 }
 
 func (l *lexer) peek() rune {
@@ -86,7 +88,7 @@ func (l *lexer) accept(valid string) bool {
 
 func (l *lexer) acceptRun(valid string) bool {
 	for strings.IndexRune(valid, l.next()) >= 0 {
-		;
+
 	}
 	l.backup()
 	return true
@@ -107,11 +109,21 @@ func (l *lexer) run() {
 	close(l.items)
 }
 
+func (l *lexer) printState() {
+	fmt.Printf(
+		"st: %d\npos: %d\nwh: %d\ncur: %s\nin: %s\n\n",
+		l.start, l.pos, l.width, string(l.peek()), l.input,
+	)
+}
+
 func lexOperator(l *lexer) stateFn {
-	var digits = "+-*/="
-	l.accept(digits)
+	if r := l.next(); isSpace(r) {
+		l.ignore()
+	} else { l.backup() }
+
+	l.accept("+-*/=")
 	l.emit(operator)
-	return lexNumber
+	return lexActionState
 }
 
 func lexNumber(l *lexer) stateFn {
@@ -135,27 +147,50 @@ func lexNumber(l *lexer) stateFn {
 		l.accept("0123456789")
 	}
 
+	if isAlphaNumeric(l.peek()) {
+		l.next()
+		return nil
+	}
+
 	l.emit(constant)
-	return lexOperator
+	return lexActionState
 }
 
 func lexVariable(l *lexer) stateFn {
 	return nil
 }
 
-func isAlphanumeric(r rune) bool {
-	return false
+func isAlphaNumeric(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
+}
+
+func isLetter(r rune) bool {
+	return r == '_' || unicode.IsLetter(r)
+}
+
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t'
+}
+
+func isOperator(r rune) bool {
+	return r == '+' || r == '-' || r == '*' || r == '/' || r == '='
 }
 
 func lexActionState(l *lexer) stateFn {
 	for {
-		var r = l.peek()
-
-		if r == '\n' {
+		switch r := l.next(); {
+		case isSpace(r):
+			l.ignore()
+		case r == '\n':
 			return nil
-		} else if isAlphanumeric(r) {
+		case isLetter(r):
+			l.backup()
 			return lexVariable
-		} else {
+		case isOperator(r):
+			l.backup()
+			return lexOperator
+		default:
+			l.backup()
 			return lexNumber
 		}
 	}
