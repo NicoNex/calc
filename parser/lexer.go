@@ -102,6 +102,7 @@ func (l *lexer) emit(t itemType) {
 	l.start = l.pos
 }
 
+// This is the main loop that makes the state machine work.
 func (l *lexer) run() {
 	for state := lexExpression; state != nil; {
 		state = state(l)
@@ -146,11 +147,6 @@ func lexNumber(l *lexer) stateFn {
 		l.accept("+-")
 		l.accept("0123456789")
 	}
-
-	// if isAlphaNumeric(l.peek()) {
-	// 	l.next()
-	// 	return nil
-	// }
 
 	l.emit(operand)
 	return lexExpression
@@ -203,6 +199,7 @@ func lexExpression(l *lexer) stateFn {
 	return nil
 }
 
+// Returns the lexer object and the channel used to receive the lexed items.
 func lex(input string) (*lexer, chan item) {
 	var l = &lexer{
 		input: input,

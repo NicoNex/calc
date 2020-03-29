@@ -9,8 +9,11 @@ import (
 	"github.com/NicoNex/calc/utils"
 )
 
+// Type used to abstract the constructor functions of the operators.
 type newOp func(l, r ops.Node) ops.Node
 
+// Parses the operator type and returns a function of type newOp
+// according to the operator type.
 func parseOperator(o string) newOp {
 	switch o {
 	case "+":
@@ -26,6 +29,7 @@ func parseOperator(o string) newOp {
 	return nil
 }
 
+// Converts a string operand to a float64 and returns it.
 func parseOperand(o string) float64 {
 	ret, err := strconv.ParseFloat(o, 64)
 	if err != nil {
@@ -35,10 +39,11 @@ func parseOperand(o string) float64 {
 	return ret
 }
 
+// Returns the AST generated from the operators stack and operands queue.
 func genAst(stack utils.Stack, queue utils.Queue) ops.Node {
 	var ast ops.Node
 
-	for operator, _ := stack.Pop(); operator != nil; {
+	for opr, _ := stack.Pop(); opr != nil; opr, _ = stack.Pop() {
 		var node1 ops.Node
 		var node2 ops.Node
 		var tmp interface{}
@@ -60,13 +65,14 @@ func genAst(stack utils.Stack, queue utils.Queue) ops.Node {
 			return nil
 		}
 		node2 = tmp.(ops.Node)
-		opfn := operator.(newOp)
+		opfn := opr.(newOp)
 		ast = opfn(node1, node2)
 	}
 
 	return ast
 }
 
+// Evaluates the types from the lexer and returns the AST.
 func Parse(in string) ops.Node {
 	var stack = utils.NewStack()
 	var queue = utils.NewQueue()
