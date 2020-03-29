@@ -3,23 +3,30 @@ package utils
 import (
 	"fmt"
 	"errors"
+	"sync"
 )
 
 type Stack struct {
 	s []interface{}
+	mutex sync.Mutex
 }
 
 func NewStack() Stack {
 	return Stack{
 		make([]interface{}, 0),
+		sync.Mutex{},
 	}
 }
 
 func (s *Stack) Push(n interface{}) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	s.s = append(s.s, n)
 }
 
 func (s *Stack) Pop() (interface{}, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var ret interface{}
 	var l = len(s.s)
 
@@ -33,6 +40,8 @@ func (s *Stack) Pop() (interface{}, error) {
 }
 
 func (s Stack) Peek() (interface{}, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var l = len(s.s)
 
 	if l == 0 {

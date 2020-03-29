@@ -3,23 +3,30 @@ package utils
 import (
 	"fmt"
 	"errors"
+	"sync"
 )
 
 type Queue struct {
 	q []interface{}
+	mutex sync.Mutex
 }
 
 func NewQueue() Queue {
 	return Queue{
 		make([]interface{}, 0),
+		sync.Mutex{},
 	}
 }
 
 func (q *Queue) Push(n interface{}) {
-	 q.q = append(q.q, n)
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	q.q = append(q.q, n)
 }
 
 func (q *Queue) Pop() (interface{}, error) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
 	var ret interface{}
 
 	if len(q.q) == 0 {
@@ -32,6 +39,8 @@ func (q *Queue) Pop() (interface{}, error) {
 }
 
 func (q Queue) Peek() (interface{}, error) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
 	if len(q.q) == 0 {
 		return nil, errors.New("empty queue")
 	}
