@@ -1,31 +1,46 @@
 package utils
 
-import "github.com/NicoNex/calc/ops"
+import (
+	"fmt"
+	"errors"
+)
 
-type stack []ops.Node
-
-func NewQueue() stack {
-	return make(stack)
+type Stack struct {
+	s []interface{}
 }
 
-func (s stack) Push(n ops.Node) stack {
-	return append(s, n)
+func NewStack() Stack {
+	return Stack{
+		make([]interface{}, 0),
+	}
 }
 
-func (s stack) Pop() (stack, ops.Node) {
-	var l = len(s)
+func (s *Stack) Push(n interface{}) {
+	s.s = append(s.s, n)
+}
+
+func (s *Stack) Pop() (interface{}, error) {
+	var ret interface{}
+	var l = len(s.s)
 
 	if l == 0 {
-		return s, nil
+		return nil, errors.New("empty stack")
 	}
-	return s[:l-1], s[l-1]
+
+	ret = s.s[l-1]
+	s.s = s.s[:l-1]
+	return ret, nil
 }
 
-func (s stack) Peek() ops.Node {
-	var l = len(s)
+func (s Stack) Peek() (interface{}, error) {
+	var l = len(s.s)
 
 	if l == 0 {
-		return nil
+		return nil, errors.New("empty stack")
 	}
-	return p[l-1]
+	return s.s[l-1], nil
+}
+
+func (s Stack) String() string {
+	return fmt.Sprintf("stack: %v", s.s)
 }

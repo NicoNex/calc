@@ -1,27 +1,43 @@
 package utils
 
-import "github.com/NicoNex/calc/ops"
+import (
+	"fmt"
+	"errors"
+)
 
-type queue []ops.Node
-
-func NewQueue() queue {
-	return make(queue)
+type Queue struct {
+	q []interface{}
 }
 
-func (q queue) Push(n ops.Node) queue {
-	return append(q, n)
-}
-
-func (q queue) Pop() (queue, ops.Node) {
-	if len(q) == 0 {
-		return q, nil
+func NewQueue() Queue {
+	return Queue{
+		make([]interface{}, 0),
 	}
-	return q[1:], q[0]
 }
 
-func (q queue) Peek() ops.Node {
-	if len(q) == 0 {
-		return nil
+func (q *Queue) Push(n interface{}) {
+	 q.q = append(q.q, n)
+}
+
+func (q *Queue) Pop() (interface{}, error) {
+	var ret interface{}
+
+	if len(q.q) == 0 {
+		return nil, errors.New("empty queue")
 	}
-	return p[0]
+
+	ret = q.q[0]
+	q.q = q.q[1:]
+	return ret, nil
+}
+
+func (q Queue) Peek() (interface{}, error) {
+	if len(q.q) == 0 {
+		return nil, errors.New("empty queue")
+	}
+	return q.q[0], nil
+}
+
+func (q Queue) String() string {
+	return fmt.Sprintf("queue: %v", q.q)
 }
