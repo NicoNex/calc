@@ -19,6 +19,8 @@ func main() {
 			return
 		}
 
-		fmt.Println(parser.Parse(string).Eval())
+		if ast := parser.Parse(string); ast != nil {
+			fmt.Println(ast.Eval())
+		}
 	}
 }

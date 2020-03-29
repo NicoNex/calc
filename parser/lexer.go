@@ -11,7 +11,7 @@ type itemType int
 
 const (
 	operator itemType = iota
-	constant
+	operand
 	variable
 	itemError
 )
@@ -75,8 +75,7 @@ func (l *lexer) errorf(format string, args ...interface{}) stateFn {
 	return nil
 }
 
-// accepts consumes the next rune
-// if it's from the valid set.
+// Consumes the next rune if it's from the valid set.
 func (l *lexer) accept(valid string) bool {
 	if strings.IndexRune(valid, l.next()) >= 0 {
 		return true
@@ -86,6 +85,7 @@ func (l *lexer) accept(valid string) bool {
 	return false
 }
 
+// Consumes all the runes if they're in the valid set.
 func (l *lexer) acceptRun(valid string) bool {
 	for strings.IndexRune(valid, l.next()) >= 0 {
 
@@ -103,7 +103,7 @@ func (l *lexer) emit(t itemType) {
 }
 
 func (l *lexer) run() {
-	for state := lexActionState; state != nil; {
+	for state := lexExpression; state != nil; {
 		state = state(l)
 	}
 	close(l.items)
@@ -123,7 +123,7 @@ func lexOperator(l *lexer) stateFn {
 
 	l.accept("+-*/=")
 	l.emit(operator)
-	return lexActionState
+	return lexExpression
 }
 
 func lexNumber(l *lexer) stateFn {
@@ -147,17 +147,22 @@ func lexNumber(l *lexer) stateFn {
 		l.accept("0123456789")
 	}
 
-	if isAlphaNumeric(l.peek()) {
-		l.next()
-		return nil
-	}
+	// if isAlphaNumeric(l.peek()) {
+	// 	l.next()
+	// 	return nil
+	// }
 
-	l.emit(constant)
-	return lexActionState
+	l.emit(operand)
+	return lexExpression
 }
 
 func lexVariable(l *lexer) stateFn {
-	return nil
+	var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	if l.acceptRun(chars) {
+		l.emit(variable)
+	}
+
+	return lexExpression
 }
 
 func isAlphaNumeric(r rune) bool {
@@ -176,7 +181,7 @@ func isOperator(r rune) bool {
 	return r == '+' || r == '-' || r == '*' || r == '/' || r == '='
 }
 
-func lexActionState(l *lexer) stateFn {
+func lexExpression(l *lexer) stateFn {
 	for {
 		switch r := l.next(); {
 		case isSpace(r):
