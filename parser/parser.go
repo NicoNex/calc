@@ -1,8 +1,8 @@
  package parser
 
 import (
-	// "os"
 	"fmt"
+	"errors"
 	"strconv"
 
 	"github.com/NicoNex/calc/ops"
@@ -14,19 +14,19 @@ type newOp func(l, r ops.Node) ops.Node
 
 // Parses the operator type and returns a function of type newOp
 // according to the operator type.
-func parseOperator(o string) newOp {
+func parseOperator(o string) (newOp, error) {
 	switch o {
 	case "+":
-		return ops.NewPlus
+		return ops.NewPlus, nil
 	case "-":
-		return ops.NewMinus
+		return ops.NewMinus, nil
 	case "*":
-		return ops.NewTimes
+		return ops.NewTimes, nil
 	case "/":
-		return ops.NewDivide
+		return ops.NewDivide, nil
 	}
 
-	return nil
+	return nil, errors.New("error: invalid operator")
 }
 
 // Converts a string operand to a float64 and returns it.
@@ -35,38 +35,53 @@ func parseOperand(o string) (float64, error) {
 }
 
 // Returns the AST generated from the operators stack and operands queue.
-func genAst(stack utils.Stack, queue utils.Queue) ops.Node {
-	var ast ops.Node
+func genAst(expr utils.Queue) ops.Node {
+	var output = utils.NewStack()
 
-	for opr, _ := stack.Pop(); opr != nil; opr, _ = stack.Pop() {
-		var node1 ops.Node
-		var node2 ops.Node
-		var tmp interface{}
+	for o, _ := expr.Pop(); o != nil; o, _ = expr.Pop() {
+		var tmp = o.(item)
 
-		if ast == nil {
-			tmp, err := queue.Pop()
+		switch tmp.typ {
+		case operand:
+			val, err := parseOperand(tmp.val)
 			if err != nil {
 				fmt.Println(err)
 				return nil
 			}
-			node1 = tmp.(ops.Node)
-		} else {
-			node1 = ast
-		}
+			output.Push(ops.NewConst(val))
 
-		tmp, err := queue.Pop()
-		if err != nil {
-			fmt.Println(err)
-			return nil
+		case operator:
+			fn, err := parseOperator(tmp.val)
+			if err != nil {
+				fmt.Println(err)
+				return nil
+			}
+
+			rnode, err := output.Pop()
+			if err != nil {
+				fmt.Println(err)
+				return nil
+			}
+
+			lnode, err := output.Pop()
+			if err != nil {
+				fmt.Println(err)
+				return nil
+			}
+
+			output.Push(fn(rnode.(ops.Node), lnode.(ops.Node)))
 		}
-		node2 = tmp.(ops.Node)
-		opfn := opr.(newOp)
-		ast = opfn(node1, node2)
 	}
 
-	return ast
+	ret, err := output.Pop()
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return ret.(ops.Node)
 }
 
+// Returns true if a has precedence over b.
 func hasPrecendence(a, b item) bool {
 	switch a.val {
 	case "+", "-":
@@ -113,6 +128,5 @@ func Parse (a string) ops.Node {
 		queue.Push(o)
 	}
 
-	fmt.Println(queue)
-	return nil //genAst(queue)
+	return genAst(queue)
 }
