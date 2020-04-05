@@ -1,7 +1,7 @@
-package parser
+ package parser
 
 import (
-	"os"
+	// "os"
 	"fmt"
 	"strconv"
 
@@ -30,13 +30,8 @@ func parseOperator(o string) newOp {
 }
 
 // Converts a string operand to a float64 and returns it.
-func parseOperand(o string) float64 {
-	ret, err := strconv.ParseFloat(o, 64)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return ret
+func parseOperand(o string) (float64, error) {
+	return strconv.ParseFloat(o, 64)
 }
 
 // Returns the AST generated from the operators stack and operands queue.
@@ -72,27 +67,52 @@ func genAst(stack utils.Stack, queue utils.Queue) ops.Node {
 	return ast
 }
 
+func hasPrecendence(a, b item) bool {
+	switch a.val {
+	case "+", "-":
+		return false
+
+	case "*", "/":
+		return b.val != "*" && b.val != "/"
+	}
+	return false
+}
+
 // Evaluates the types from the lexer and returns the AST.
-func Parse(in string) ops.Node {
+func Parse (a string) ops.Node {
 	var stack = utils.NewStack()
 	var queue = utils.NewQueue()
 
-	_, items := lex(in)
+	_, items := lex(a)
 
 	for i := range items {
 		switch i.typ {
 		case operand:
-			v := parseOperand(i.val)
-			c := ops.NewConst(v)
-			queue.Push(c)
+			queue.Push(i)
+
 		case operator:
-			fn := parseOperator(i.val)
-			stack.Push(fn)
+			for o, _ := stack.Peek(); o != nil; o, _ = stack.Peek() {
+				var tmp = o.(item)
+
+				if hasPrecendence(tmp, i) {
+					queue.Push(o)
+					stack.Pop()
+				} else {
+					break
+				}
+			}
+			// TODO: handle brackets here
+			stack.Push(i)
 
 		case variable:
 			fmt.Println("variable")
 		}
 	}
 
-	return genAst(stack, queue)
+	for o, _ := stack.Pop(); o != nil; o, _ = stack.Pop() {
+		queue.Push(o)
+	}
+
+	fmt.Println(queue)
+	return nil //genAst(queue)
 }
