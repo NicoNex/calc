@@ -1,7 +1,6 @@
  package parser
 
 import (
-	"fmt"
 	"errors"
 	"strconv"
 
@@ -45,7 +44,6 @@ func genAst(expr utils.Queue) ops.Node {
 		case operand:
 			val, err := parseOperand(tmp.val)
 			if err != nil {
-				fmt.Println(err)
 				return nil
 			}
 			output.Push(ops.NewConst(val))
@@ -53,29 +51,25 @@ func genAst(expr utils.Queue) ops.Node {
 		case operator:
 			fn, err := parseOperator(tmp.val)
 			if err != nil {
-				fmt.Println(err)
 				return nil
 			}
 
 			rnode, err := output.Pop()
 			if err != nil {
-				fmt.Println(err)
 				return nil
 			}
 
 			lnode, err := output.Pop()
 			if err != nil {
-				fmt.Println(err)
 				return nil
 			}
 
-			output.Push(fn(rnode.(ops.Node), lnode.(ops.Node)))
+			output.Push(fn(lnode.(ops.Node), rnode.(ops.Node)))
 		}
 	}
 
 	ret, err := output.Pop()
 	if err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	return ret.(ops.Node)
@@ -89,6 +83,9 @@ func hasPrecendence(a, b item) bool {
 
 	case "*", "/":
 		return b.val != "*" && b.val != "/"
+
+	case "=":
+		return true
 	}
 	return false
 }
@@ -102,7 +99,7 @@ func Parse (a string) ops.Node {
 
 	for i := range items {
 		switch i.typ {
-		case operand:
+		case operand, variable:
 			queue.Push(i)
 
 		case operator:
@@ -118,9 +115,6 @@ func Parse (a string) ops.Node {
 			}
 			// TODO: handle brackets here
 			stack.Push(i)
-
-		case variable:
-			fmt.Println("variable")
 		}
 	}
 

@@ -21,6 +21,8 @@ func main() {
 
 		if ast := parser.Parse(string); ast != nil {
 			fmt.Println(ast.Eval())
+		} else {
+			fmt.Println("syntax error")
 		}
 	}
 }
