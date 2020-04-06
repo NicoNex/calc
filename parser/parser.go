@@ -1,4 +1,4 @@
- package parser
+package parser
 
 import (
 	"errors"
@@ -91,7 +91,7 @@ func hasPrecendence(a, b item) bool {
 }
 
 // Evaluates the types from the lexer and returns the AST.
-func Parse (a string) ops.Node {
+func Parse(a string) ops.Node {
 	var stack = utils.NewStack()
 	var queue = utils.NewQueue()
 
@@ -104,17 +104,26 @@ func Parse (a string) ops.Node {
 
 		case operator:
 			for o, _ := stack.Peek(); o != nil; o, _ = stack.Peek() {
-				var tmp = o.(item)
-
-				if hasPrecendence(tmp, i) {
-					queue.Push(o)
-					stack.Pop()
-				} else {
+				if tmp := o.(item); !hasPrecendence(tmp, i) {
 					break
 				}
+				queue.Push(o)
+				stack.Pop()
 			}
-			// TODO: handle brackets here
 			stack.Push(i)
+
+		case bracket:
+			switch i.val {
+			case "(":
+				stack.Push(i)
+			case ")":
+				for o, _ := stack.Pop(); o != nil; o, _ = stack.Pop() {
+					if tmp := o.(item); tmp.val == "(" {
+						break
+					}
+					queue.Push(o)
+				}
+			}
 		}
 	}
 

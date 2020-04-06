@@ -1,13 +1,13 @@
 package utils
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"sync"
 )
 
 type Stack struct {
-	s []interface{}
+	s     []interface{}
 	mutex sync.Mutex
 }
 

@@ -1,13 +1,13 @@
 package utils
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"sync"
 )
 
 type Queue struct {
-	q []interface{}
+	q     []interface{}
 	mutex sync.Mutex
 }
 

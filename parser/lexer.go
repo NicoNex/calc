@@ -13,6 +13,7 @@ const (
 	operator itemType = iota
 	operand
 	variable
+	bracket
 	itemError
 )
 
@@ -26,6 +27,7 @@ type lexer struct {
 	start int
 	pos   int
 	width int
+	prev  itemType
 	items chan item
 }
 
@@ -100,6 +102,7 @@ func (l *lexer) emit(t itemType) {
 		l.input[l.start:l.pos],
 	}
 	l.start = l.pos
+	l.prev = t
 }
 
 // This is the main loop that makes the state machine work.
@@ -118,12 +121,14 @@ func (l *lexer) printState() {
 }
 
 func lexOperator(l *lexer) stateFn {
-	if r := l.next(); isSpace(r) {
-		l.ignore()
-	} else { l.backup() }
-
 	l.accept("+-*/=")
 	l.emit(operator)
+	return lexExpression
+}
+
+func lexBracket(l *lexer) stateFn {
+	l.accept("()")
+	l.emit(bracket)
 	return lexExpression
 }
 
@@ -161,10 +166,6 @@ func lexVariable(l *lexer) stateFn {
 	return lexExpression
 }
 
-func isAlphaNumeric(r rune) bool {
-	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
-}
-
 func isLetter(r rune) bool {
 	return r == '_' || unicode.IsLetter(r)
 }
@@ -177,19 +178,37 @@ func isOperator(r rune) bool {
 	return r == '+' || r == '-' || r == '*' || r == '/' || r == '='
 }
 
+func isBracket(r rune) bool {
+	return r == '(' || r == ')'
+}
+
 func lexExpression(l *lexer) stateFn {
 	for {
 		switch r := l.next(); {
+
 		case isSpace(r):
 			l.ignore()
+
 		case r == '\n':
 			return nil
+
 		case isLetter(r):
 			l.backup()
 			return lexVariable
+
 		case isOperator(r):
 			l.backup()
-			return lexOperator
+			switch l.prev {
+			case operator:
+				return lexNumber
+			default:
+				return lexOperator
+			}
+
+		case isBracket(r):
+			l.backup()
+			return lexBracket
+
 		default:
 			l.backup()
 			return lexNumber
