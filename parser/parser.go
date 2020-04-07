@@ -8,6 +8,15 @@ import (
 	"github.com/NicoNex/calc/utils"
 )
 
+var precedence = map[string]int{
+	"+": 0,
+	"-": 0,
+	"*": 1,
+	"/": 1,
+	"^": 2,
+	"=": 3,
+}
+
 // Type used to abstract the constructor functions of the operators.
 type newOp func(l, r ops.Node) ops.Node
 
@@ -23,6 +32,8 @@ func parseOperator(o string) (newOp, error) {
 		return ops.NewTimes, nil
 	case "/":
 		return ops.NewDivide, nil
+	case "^":
+		return ops.NewPower, nil
 	}
 
 	return nil, errors.New("error: invalid operator")
@@ -53,41 +64,28 @@ func genAst(expr utils.Queue) ops.Node {
 			if err != nil {
 				return nil
 			}
-
 			rnode, err := output.Pop()
 			if err != nil {
 				return nil
 			}
-
 			lnode, err := output.Pop()
 			if err != nil {
 				return nil
 			}
-
 			output.Push(fn(lnode.(ops.Node), rnode.(ops.Node)))
 		}
 	}
 
-	ret, err := output.Pop()
-	if err != nil {
+	if ret, err := output.Pop(); err != nil {
 		return nil
+	} else {
+		return ret.(ops.Node)
 	}
-	return ret.(ops.Node)
 }
 
 // Returns true if a has precedence over b.
 func hasPrecendence(a, b item) bool {
-	switch a.val {
-	case "+", "-":
-		return false
-
-	case "*", "/":
-		return b.val != "*" && b.val != "/"
-
-	case "=":
-		return true
-	}
-	return false
+	return precedence[a.val] > precedence[b.val]
 }
 
 // Evaluates the types from the lexer and returns the AST.

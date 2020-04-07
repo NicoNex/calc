@@ -121,7 +121,7 @@ func (l *lexer) printState() {
 }
 
 func lexOperator(l *lexer) stateFn {
-	l.accept("+-*/=")
+	l.accept("+-*/=^")
 	l.emit(operator)
 	return lexExpression
 }
@@ -175,7 +175,7 @@ func isSpace(r rune) bool {
 }
 
 func isOperator(r rune) bool {
-	return r == '+' || r == '-' || r == '*' || r == '/' || r == '='
+	return r == '+' || r == '-' || r == '*' || r == '/' || r == '=' || r == '^'
 }
 
 func isBracket(r rune) bool {
