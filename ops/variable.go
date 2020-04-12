@@ -13,3 +13,7 @@ func NewVariable(v Node) Node {
 func (v Variable) Eval() float64 {
 	return v.v.Eval()
 }
+
+func (v Variable) String() string {
+	return v.v.String()
+}

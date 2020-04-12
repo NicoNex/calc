@@ -1,5 +1,7 @@
 package ops
 
+import "fmt"
+
 type Minus struct {
 	l Node
 	r Node
@@ -14,4 +16,8 @@ func NewMinus(l, r Node) Node {
 
 func (m Minus) Eval() float64 {
 	return m.l.Eval() - m.r.Eval()
+}
+
+func (m Minus) String() string {
+	return fmt.Sprintf("(%v-%v)", m.l, m.r)
 }

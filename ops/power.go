@@ -1,6 +1,9 @@
 package ops
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type Power struct {
 	l Node
@@ -16,4 +19,8 @@ func NewPower(l, r Node) Node {
 
 func (p Power) Eval() float64 {
 	return math.Pow(p.l.Eval(), p.r.Eval())
+}
+
+func (p Power) String() string {
+	return fmt.Sprintf("(%v^%v)", p.l, p.r)
 }
