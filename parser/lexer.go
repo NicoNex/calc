@@ -13,6 +13,11 @@ const (
 	operator itemType = iota
 	operand
 	variable
+<<<<<<< Updated upstream
+=======
+	assign
+	bracket
+>>>>>>> Stashed changes
 	itemError
 )
 
@@ -118,12 +123,30 @@ func (l *lexer) printState() {
 }
 
 func lexOperator(l *lexer) stateFn {
+<<<<<<< Updated upstream
 	if r := l.next(); isSpace(r) {
 		l.ignore()
 	} else { l.backup() }
 
 	l.accept("+-*/=")
 	l.emit(operator)
+=======
+	l.accept("+-*/^")
+	l.emit(operator)
+	return lexExpression
+}
+
+func lexAssign(l *lexer) stateFn {
+	fmt.Println("ses")
+	l.accept("=")
+	l.emit(assign)
+	return lexExpression
+}
+
+func lexBracket(l *lexer) stateFn {
+	l.accept("()")
+	l.emit(bracket)
+>>>>>>> Stashed changes
 	return lexExpression
 }
 
@@ -174,7 +197,19 @@ func isSpace(r rune) bool {
 }
 
 func isOperator(r rune) bool {
+<<<<<<< Updated upstream
 	return r == '+' || r == '-' || r == '*' || r == '/' || r == '='
+=======
+	return r == '+' || r == '-' || r == '*' || r == '/' || r == '^'
+}
+
+func isAssign(r rune) bool {
+	return r == '='
+}
+
+func isBracket(r rune) bool {
+	return r == '(' || r == ')'
+>>>>>>> Stashed changes
 }
 
 func lexExpression(l *lexer) stateFn {
@@ -189,7 +224,25 @@ func lexExpression(l *lexer) stateFn {
 			return lexVariable
 		case isOperator(r):
 			l.backup()
+<<<<<<< Updated upstream
 			return lexOperator
+=======
+			switch l.prev {
+			case operator, assign:
+				return lexNumber
+			default:
+				return lexOperator
+			}
+
+		case isAssign(r):
+			l.backup()
+			return lexAssign
+
+		case isBracket(r):
+			l.backup()
+			return lexBracket
+
+>>>>>>> Stashed changes
 		default:
 			l.backup()
 			return lexNumber

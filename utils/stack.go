@@ -31,7 +31,7 @@ func (s *Stack) Pop() (interface{}, error) {
 	var l = len(s.s)
 
 	if l == 0 {
-		return nil, errors.New("empty stack")
+		return nil, NewEmptyStack()
 	}
 
 	ret = s.s[l-1]
@@ -45,7 +45,7 @@ func (s Stack) Peek() (interface{}, error) {
 	var l = len(s.s)
 
 	if l == 0 {
-		return nil, errors.New("empty stack")
+		return nil, NewEmptyStack()
 	}
 	return s.s[l-1], nil
 }

@@ -30,7 +30,7 @@ func (q *Queue) Pop() (interface{}, error) {
 	var ret interface{}
 
 	if len(q.q) == 0 {
-		return nil, errors.New("empty queue")
+		return nil, NewEmptyQueue()
 	}
 
 	ret = q.q[0]
@@ -42,7 +42,7 @@ func (q Queue) Peek() (interface{}, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	if len(q.q) == 0 {
-		return nil, errors.New("empty queue")
+		return nil, NewEmptyQueue()
 	}
 	return q.q[0], nil
 }
