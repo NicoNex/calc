@@ -1,50 +1,47 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 )
 
 type Queue struct {
-	q     []interface{}
-	mutex sync.Mutex
+	q []interface{}
+	sync.RWMutex
 }
 
 func NewQueue() Queue {
 	return Queue{
 		make([]interface{}, 0),
-		sync.Mutex{},
+		sync.RWMutex{},
 	}
 }
 
 func (q *Queue) Push(n interface{}) {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
+	q.Lock()
+	defer q.Unlock()
 	q.q = append(q.q, n)
 }
 
-func (q *Queue) Pop() (interface{}, error) {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	var ret interface{}
+func (q *Queue) Pop() interface{} {
+	q.Lock()
+	defer q.Unlock()
 
 	if len(q.q) == 0 {
-		return nil, errors.New("empty queue")
+		return nil
 	}
-
-	ret = q.q[0]
+	ret := q.q[0]
 	q.q = q.q[1:]
-	return ret, nil
+	return ret
 }
 
-func (q Queue) Peek() (interface{}, error) {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
+func (q Queue) Peek() interface{} {
+	q.Lock()
+	defer q.Unlock()
 	if len(q.q) == 0 {
-		return nil, errors.New("empty queue")
+		return nil
 	}
-	return q.q[0], nil
+	return q.q[0]
 }
 
 func (q Queue) String() string {

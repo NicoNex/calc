@@ -10,11 +10,12 @@ import (
 type itemType int
 
 const (
-	operator itemType = iota
-	operand
-	variable
-	bracket
-	itemError
+	itemError itemType = iota
+	itemOperator
+	itemOperand
+	itemVariable
+	itemBracket
+	itemAssignment
 )
 
 type item struct {
@@ -121,14 +122,20 @@ func (l *lexer) printState() {
 }
 
 func lexOperator(l *lexer) stateFn {
-	l.accept("+-*/=^")
-	l.emit(operator)
+	l.accept("+-*/^")
+	l.emit(itemOperator)
+	return lexExpression
+}
+
+func lexAssignment(l *lexer) stateFn {
+	l.accept("=")
+	l.emit(itemAssignment)
 	return lexExpression
 }
 
 func lexBracket(l *lexer) stateFn {
 	l.accept("()")
-	l.emit(bracket)
+	l.emit(itemBracket)
 	return lexExpression
 }
 
@@ -153,14 +160,14 @@ func lexNumber(l *lexer) stateFn {
 		l.accept("0123456789")
 	}
 
-	l.emit(operand)
+	l.emit(itemOperand)
 	return lexExpression
 }
 
 func lexVariable(l *lexer) stateFn {
-	var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 	if l.acceptRun(chars) {
-		l.emit(variable)
+		l.emit(itemVariable)
 	}
 
 	return lexExpression
@@ -175,11 +182,15 @@ func isSpace(r rune) bool {
 }
 
 func isOperator(r rune) bool {
-	return r == '+' || r == '-' || r == '*' || r == '/' || r == '=' || r == '^'
+	return r == '+' || r == '-' || r == '*' || r == '/' || r == '^'
 }
 
 func isBracket(r rune) bool {
 	return r == '(' || r == ')'
+}
+
+func isAssignment(r rune) bool {
+	return r == '='
 }
 
 func lexExpression(l *lexer) stateFn {
@@ -196,10 +207,14 @@ func lexExpression(l *lexer) stateFn {
 			l.backup()
 			return lexVariable
 
+		case isAssignment(r):
+			l.backup()
+			return lexAssignment
+
 		case isOperator(r):
 			l.backup()
 			switch l.prev {
-			case operator:
+			case itemOperator:
 				return lexNumber
 			default:
 				return lexOperator

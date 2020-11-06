@@ -1,12 +1,16 @@
 package parser
 
 import (
+	"fmt"
 	"errors"
 	"strconv"
 
 	"github.com/NicoNex/calc/ops"
 	"github.com/NicoNex/calc/utils"
 )
+
+// Type used to abstract the constructor functions of the operators.
+type newOp func(l, r ops.Node) ops.Node
 
 var precedence = map[string]int{
 	"+": 0,
@@ -17,8 +21,11 @@ var precedence = map[string]int{
 	"=": 3,
 }
 
-// Type used to abstract the constructor functions of the operators.
-type newOp func(l, r ops.Node) ops.Node
+var InvalidOperator = errors.New("error: invalid operator")
+
+func unwrap(i interface{}) item {
+	return i.(item)
+}
 
 // Parses the operator type and returns a function of type newOp
 // according to the operator type.
@@ -35,8 +42,7 @@ func parseOperator(o string) (newOp, error) {
 	case "^":
 		return ops.NewPower, nil
 	}
-
-	return nil, errors.New("error: invalid operator")
+	return nil, InvalidOperator
 }
 
 // Converts a string operand to a float64 and returns it.
@@ -48,35 +54,35 @@ func parseOperand(o string) (float64, error) {
 func genAst(expr utils.Queue) ops.Node {
 	var output = utils.NewStack()
 
-	for o, _ := expr.Pop(); o != nil; o, _ = expr.Pop() {
+	for o := expr.Pop(); o != nil; o = expr.Pop() {
 		var tmp = o.(item)
 
 		switch tmp.typ {
-		case operand:
+		case itemOperand:
 			val, err := parseOperand(tmp.val)
 			if err != nil {
 				return nil
 			}
 			output.Push(ops.NewConst(val))
 
-		case operator:
+		case itemOperator:
 			fn, err := parseOperator(tmp.val)
 			if err != nil {
 				return nil
 			}
-			rnode, err := output.Pop()
-			if err != nil {
+			rnode := output.Pop()
+			if rnode == nil {
 				return nil
 			}
-			lnode, err := output.Pop()
-			if err != nil {
+			lnode := output.Pop()
+			if lnode == nil {
 				return nil
 			}
 			output.Push(fn(lnode.(ops.Node), rnode.(ops.Node)))
 		}
 	}
 
-	if ret, err := output.Pop(); err != nil {
+	if ret := output.Pop(); ret == nil {
 		return nil
 	} else {
 		return ret.(ops.Node)
@@ -97,12 +103,12 @@ func Parse(a string) ops.Node {
 
 	for i := range items {
 		switch i.typ {
-		case operand, variable:
+		case itemOperand, itemVariable:
 			queue.Push(i)
 
-		case operator:
-			for o, _ := stack.Peek(); o != nil; o, _ = stack.Peek() {
-				if tmp := o.(item); !hasPrecendence(tmp, i) {
+		case itemOperator:
+			for o := stack.Peek(); o != nil; o = stack.Peek() {
+				if !hasPrecendence(unwrap(o), i) {
 					break
 				}
 				queue.Push(o)
@@ -110,13 +116,13 @@ func Parse(a string) ops.Node {
 			}
 			stack.Push(i)
 
-		case bracket:
+		case itemBracket:
 			switch i.val {
 			case "(":
 				stack.Push(i)
 			case ")":
-				for o, _ := stack.Pop(); o != nil; o, _ = stack.Pop() {
-					if tmp := o.(item); tmp.val == "(" {
+				for o := stack.Pop(); o != nil; o = stack.Pop() {
+					if tmp := unwrap(o); tmp.val == "(" {
 						break
 					}
 					queue.Push(o)
@@ -125,9 +131,10 @@ func Parse(a string) ops.Node {
 		}
 	}
 
-	for o, _ := stack.Pop(); o != nil; o, _ = stack.Pop() {
+	for o := stack.Pop(); o != nil; o = stack.Pop() {
 		queue.Push(o)
 	}
 
+	fmt.Println(queue)
 	return genAst(queue)
 }

@@ -1,53 +1,50 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 )
 
 type Stack struct {
-	s     []interface{}
-	mutex sync.Mutex
+	s []interface{}
+	sync.RWMutex
 }
 
 func NewStack() Stack {
 	return Stack{
 		make([]interface{}, 0),
-		sync.Mutex{},
+		sync.RWMutex{},
 	}
 }
 
 func (s *Stack) Push(n interface{}) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.Lock()
+	defer s.Unlock()
 	s.s = append(s.s, n)
 }
 
-func (s *Stack) Pop() (interface{}, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	var ret interface{}
+func (s *Stack) Pop() interface{} {
+	s.Lock()
+	defer s.Unlock()
 	var l = len(s.s)
 
 	if l == 0 {
-		return nil, errors.New("empty stack")
+		return nil
 	}
-
-	ret = s.s[l-1]
+	ret := s.s[l-1]
 	s.s = s.s[:l-1]
-	return ret, nil
+	return ret
 }
 
-func (s Stack) Peek() (interface{}, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (s Stack) Peek() interface{} {
+	s.Lock()
+	defer s.Unlock()
 	var l = len(s.s)
 
 	if l == 0 {
-		return nil, errors.New("empty stack")
+		return nil
 	}
-	return s.s[l-1], nil
+	return s.s[l-1]
 }
 
 func (s Stack) String() string {
