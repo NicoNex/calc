@@ -1,4 +1,4 @@
-package ops
+package ast
 
 type Node interface {
 	Eval() float64

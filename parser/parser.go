@@ -4,12 +4,12 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/NicoNex/calc/ops"
+	"github.com/NicoNex/calc/ast"
 	"github.com/NicoNex/calc/utils"
 )
 
 // Type used to abstract the constructor functions of the operators.
-type newOp func(l, r ops.Node) ops.Node
+type newOp func(l, r ast.Node) ast.Node
 
 var precedence = map[string]int{
 	"+": 0,
@@ -31,15 +31,15 @@ func unwrap(i interface{}) item {
 func parseOperator(o string) (newOp, error) {
 	switch o {
 	case "+":
-		return ops.NewPlus, nil
+		return ast.NewPlus, nil
 	case "-":
-		return ops.NewMinus, nil
+		return ast.NewMinus, nil
 	case "*":
-		return ops.NewTimes, nil
+		return ast.NewTimes, nil
 	case "/":
-		return ops.NewDivide, nil
+		return ast.NewDivide, nil
 	case "^":
-		return ops.NewPower, nil
+		return ast.NewPower, nil
 	}
 	return nil, InvalidOperator
 }
@@ -50,7 +50,7 @@ func parseOperand(o string) (float64, error) {
 }
 
 // Returns the AST generated from the operators stack and operands queue.
-func genAst(expr []item) ops.Node {
+func genAst(expr []item) ast.Node {
 	var output = utils.NewStack()
 
 	for i, itm := range expr {
@@ -60,7 +60,7 @@ func genAst(expr []item) ops.Node {
 			if err != nil {
 				return nil
 			}
-			output.Push(ops.NewConst(val))
+			output.Push(ast.NewConst(val))
 
 		case itemOperator:
 			fn, err := parseOperator(itm.val)
@@ -75,10 +75,10 @@ func genAst(expr []item) ops.Node {
 			if lnode == nil {
 				return nil
 			}
-			output.Push(fn(lnode.(ops.Node), rnode.(ops.Node)))
+			output.Push(fn(lnode.(ast.Node), rnode.(ast.Node)))
 
 		case itemVariable:
-			output.Push(ops.NewVariable(itm.val))
+			output.Push(ast.NewVariable(itm.val))
 
 		case itemAssign:
 			output.Pop()
@@ -88,13 +88,13 @@ func genAst(expr []item) ops.Node {
 			}
 			if i > 0 {
 				expr[i] = expr[i-1]
-				return ops.NewAssign(v.(ops.Variable), genAst(expr[i:]))
+				return ast.NewAssign(v.(ast.Variable), genAst(expr[i:]))
 			}
 		}
 	}
 
 	if ret := output.Pop(); ret != nil {
-		return ret.(ops.Node)
+		return ret.(ast.Node)
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func toPostfix(items chan item) []item {
 }
 
 // Evaluates the types from the lexer and returns the AST.
-func Parse(a string) ops.Node {
+func Parse(a string) ast.Node {
 	_, items := lex(a)
 	return genAst(toPostfix(items))
 }
