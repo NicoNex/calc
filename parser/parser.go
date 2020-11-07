@@ -30,8 +30,6 @@ var precedence = map[string]int{
 
 var input string
 
-var InvalidOperator = errors.New("error: invalid operator")
-
 // Converts a string operand to a float64 and returns it.
 func parseOperand(o string) (float64, error) {
 	return strconv.ParseFloat(o, 64)
@@ -62,7 +60,7 @@ func genAst(expr []item) (ast.Node, error) {
 			if fn, ok := opFuncs[itm.val]; ok {
 				output.Push(fn(lnode.(ast.Node), rnode.(ast.Node)))
 			} else {
-				return nil, InvalidOperator
+				return nil, NewSyntaxError("invalid operator", input, itm.pos)
 			}
 
 		case itemVariable:
