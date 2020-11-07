@@ -47,3 +47,7 @@ func (q Queue) Peek() interface{} {
 func (q Queue) String() string {
 	return fmt.Sprintf("queue: %v", q.q)
 }
+
+func (q Queue) Slice() []interface{} {
+	return q.q
+}

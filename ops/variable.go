@@ -1,19 +1,22 @@
 package ops
 
 type Variable struct {
-	v Node
+	n string
 }
 
-func NewVariable(v Node) Node {
+func NewVariable(n string) Node {
 	return Variable{
-		v,
+		n,
 	}
 }
 
 func (v Variable) Eval() float64 {
-	return v.v.Eval()
+	if n, ok := vtable[v.n]; ok {
+		return n.Eval()
+	}
+	return 0
 }
 
 func (v Variable) String() string {
-	return v.v.String()
+	return v.n
 }

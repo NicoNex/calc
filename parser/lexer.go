@@ -15,7 +15,7 @@ const (
 	itemOperand
 	itemVariable
 	itemBracket
-	itemAssignment
+	itemAssign
 )
 
 type item struct {
@@ -129,7 +129,7 @@ func lexOperator(l *lexer) stateFn {
 
 func lexAssignment(l *lexer) stateFn {
 	l.accept("=")
-	l.emit(itemAssignment)
+	l.emit(itemAssign)
 	return lexExpression
 }
 

@@ -50,3 +50,7 @@ func (s Stack) Peek() interface{} {
 func (s Stack) String() string {
 	return fmt.Sprintf("stack: %v", s.s)
 }
+
+func (s Stack) Slice() []interface{} {
+	return s.s
+}

@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"errors"
 	"strconv"
 
@@ -51,22 +50,20 @@ func parseOperand(o string) (float64, error) {
 }
 
 // Returns the AST generated from the operators stack and operands queue.
-func genAst(expr utils.Queue) ops.Node {
+func genAst(expr []item) ops.Node {
 	var output = utils.NewStack()
 
-	for o := expr.Pop(); o != nil; o = expr.Pop() {
-		var tmp = o.(item)
-
-		switch tmp.typ {
+	for i, itm := range expr {
+		switch itm.typ {
 		case itemOperand:
-			val, err := parseOperand(tmp.val)
+			val, err := parseOperand(itm.val)
 			if err != nil {
 				return nil
 			}
 			output.Push(ops.NewConst(val))
 
 		case itemOperator:
-			fn, err := parseOperator(tmp.val)
+			fn, err := parseOperator(itm.val)
 			if err != nil {
 				return nil
 			}
@@ -79,14 +76,27 @@ func genAst(expr utils.Queue) ops.Node {
 				return nil
 			}
 			output.Push(fn(lnode.(ops.Node), rnode.(ops.Node)))
+
+		case itemVariable:
+			output.Push(ops.NewVariable(itm.val))
+
+		case itemAssign:
+			output.Pop()
+			v := output.Pop()
+			if v == nil {
+				return nil
+			}
+			if i > 0 {
+				expr[i] = expr[i-1]
+				return ops.NewAssign(v.(ops.Variable), genAst(expr[i:]))
+			}
 		}
 	}
 
-	if ret := output.Pop(); ret == nil {
-		return nil
-	} else {
+	if ret := output.Pop(); ret != nil {
 		return ret.(ops.Node)
 	}
+	return nil
 }
 
 // Returns true if a has precedence over b.
@@ -94,24 +104,21 @@ func hasPrecendence(a, b item) bool {
 	return precedence[a.val] > precedence[b.val]
 }
 
-// Evaluates the types from the lexer and returns the AST.
-func Parse(a string) ops.Node {
+func toPostfix(items chan item) []item {
+	var ret []item
 	var stack = utils.NewStack()
-	var queue = utils.NewQueue()
-
-	_, items := lex(a)
 
 	for i := range items {
 		switch i.typ {
 		case itemOperand, itemVariable:
-			queue.Push(i)
+			ret = append(ret, i)
 
-		case itemOperator:
+		case itemOperator, itemAssign:
 			for o := stack.Peek(); o != nil; o = stack.Peek() {
 				if !hasPrecendence(unwrap(o), i) {
 					break
 				}
-				queue.Push(o)
+				ret = append(ret, o.(item))
 				stack.Pop()
 			}
 			stack.Push(i)
@@ -125,16 +132,20 @@ func Parse(a string) ops.Node {
 					if tmp := unwrap(o); tmp.val == "(" {
 						break
 					}
-					queue.Push(o)
+					ret = append(ret, o.(item))
 				}
 			}
 		}
 	}
 
 	for o := stack.Pop(); o != nil; o = stack.Pop() {
-		queue.Push(o)
+		ret = append(ret, o.(item))
 	}
+	return ret
+}
 
-	fmt.Println(queue)
-	return genAst(queue)
+// Evaluates the types from the lexer and returns the AST.
+func Parse(a string) ops.Node {
+	_, items := lex(a)
+	return genAst(toPostfix(items))
 }
