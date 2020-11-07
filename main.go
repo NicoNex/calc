@@ -54,7 +54,7 @@ func main() {
 
 		res, err := parser.Parse(input)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(term, err)
 			continue
 		}
 		fmt.Fprintln(term, res.Eval())
