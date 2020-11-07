@@ -21,6 +21,7 @@ const (
 type item struct {
 	typ itemType
 	val string
+	pos int
 }
 
 type lexer struct {
@@ -74,6 +75,7 @@ func (l *lexer) errorf(format string, args ...interface{}) stateFn {
 	l.items <- item{
 		itemError,
 		fmt.Sprintf(format, args...),
+		l.start,
 	}
 	return nil
 }
@@ -101,6 +103,7 @@ func (l *lexer) emit(t itemType) {
 	l.items <- item{
 		t,
 		l.input[l.start:l.pos],
+		l.start,
 	}
 	l.start = l.pos
 	l.prev = t
