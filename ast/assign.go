@@ -7,7 +7,7 @@ type Assign struct {
 	r Node
 }
 
-var vtable map[string]Node
+var vtable map[string]float64
 
 func NewAssign(l, r Node) Node {
 	return Assign{
@@ -17,8 +17,10 @@ func NewAssign(l, r Node) Node {
 }
 
 func (a Assign) Eval() float64 {
-	vtable[a.l.String()] = a.r
-	return a.r.Eval()
+	var v = a.r.Eval()
+
+	vtable[a.l.String()] = v
+	return v
 }
 
 func (a Assign) String() string {
@@ -26,5 +28,5 @@ func (a Assign) String() string {
 }
 
 func init() {
-	vtable = make(map[string]Node)
+	vtable = make(map[string]float64)
 }

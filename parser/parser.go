@@ -9,7 +9,7 @@ import (
 )
 
 // Type used to abstract the constructor functions of the operators.
-type newOp func(l, r ast.Node) ast.Node
+type newOp func(ast.Node, ast.Node) ast.Node
 
 var precedence = map[string]int{
 	"+": 0,
@@ -87,8 +87,8 @@ func genAst(expr []item) ast.Node {
 				return nil
 			}
 			if i > 0 {
-				expr[i] = expr[i-1]
-				return ast.NewAssign(v.(ast.Variable), genAst(expr[i:]))
+				tmp := append(expr[1:i], expr[i+1:]...)
+				return ast.NewAssign(v.(ast.Variable), genAst(tmp))
 			}
 		}
 	}
