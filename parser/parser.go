@@ -78,7 +78,11 @@ func genAst(expr []item) (ast.Node, error) {
 				if err != nil {
 					return nil, err
 				}
-				return ast.NewAssign(v.(ast.Variable), right), nil
+				va, ok := v.(ast.Variable)
+				if !ok {
+					return nil, NewSyntaxError("invalid assignment", input, itm.pos)
+				}
+				return ast.NewAssign(va, right), nil
 			}
 			return nil, NewSyntaxError("invalid statement", input, itm.pos)
 		}
