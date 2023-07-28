@@ -1,3 +1,9 @@
+# Warning
+This was the beginning of my journey into programming language design.  
+This repository is now **unmaintained** and is **buggy**.  
+For a cli calculator that does way more than this (it's actually an entire programming language) refer to **[Tau](https://github.com/NicoNex/tau)**.  
+**[Tau](https://github.com/NicoNex/tau)** is where all the development in the subject is being carried out.
+
 # calc
 A fast and simple cli calculator.
 
